@@ -3,45 +3,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ABTI 二次元灵魂测试 - 测测你的动漫人设</title>
 
-    <script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/tailwindcss/2.2.19/tailwind.min.js"></script>
-
     <script src="https://lib.baomitu.com/react/18.2.0/umd/react.production.min.js"></script>
-
     <script src="https://lib.baomitu.com/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
 
     <script src="https://lib.baomitu.com/babel-standalone/7.22.20/babel.min.js"></script>
 
     <style>
-        /* 这里的样式保持不变 */
+        /* 强制给 body 设置背景颜色，防止样式失效时一片空白 */
+        body { background-color: #f6f9fc; }
         @import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap');
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #f6f9fc;
-            background-image: radial-gradient(#fb7299 1px, transparent 1px), radial-gradient(#00a1d6 1px, transparent 1px);
-            background-size: 40px 40px;
-            background-position: 0 0, 20px 20px;
-            background-attachment: fixed;
-            margin: 0;
-            padding: 0;
-            color: #333;
-        }
-        .anime-title {
-            font-family: 'ZCOOL KuaiLe', cursive, sans-serif;
-        }
-        .fade-in {
-            animation: fadeIn 0.4s ease-out forwards;
-        }
+        
+        /* 之前的动画样式保持不变 */
+        .anime-title { font-family: 'ZCOOL KuaiLe', cursive, sans-serif; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .option-btn:hover {
-            transform: scale(1.02);
-            box-shadow: 0 10px 15px -3px rgba(251, 114, 153, 0.3);
-        }
-        .option-btn {
-            transition: all 0.2s ease;
-        }
+        .option-btn:hover { transform: scale(1.02); box-shadow: 0 10px 15px -3px rgba(251, 114, 153, 0.3); }
+        .option-btn { transition: all 0.2s ease; }
     </style>
 </head>
 <body>
