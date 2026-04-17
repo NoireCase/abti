@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ABTI 二次元灵魂测试 - 测测你的动漫人设</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 React 和 ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- 引入 Babel 用于浏览器内编译 JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap');
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f6f9fc;
+            background-image: radial-gradient(#fb7299 1px, transparent 1px), radial-gradient(#00a1d6 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+            background-attachment: fixed;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .anime-title {
+            font-family: 'ZCOOL KuaiLe', cursive, sans-serif;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .option-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 15px -3px rgba(251, 114, 153, 0.3);
+        }
+        .option-btn {
+            transition: all 0.2s ease;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- 题库数据 (12题，4个维度，每个维度3题防止平局) ---
+        // 维度1: B (Battle 热血战斗) vs D (Daily 摸鱼日常)
+        // 维度2: C (Chuunibyou 中二幻想) vs T (Tsukkomi 吐槽现实)
+        // 维度3: A (Tsundere 傲娇掩饰) vs S (Straight 直球坦率)
+        // 维度4: O (OP 龙傲天/无敌) vs M (Mob 吃瘪路人)
+
+        const questions = [
+            {
+                id: 1,
+                axis: 'BD',
+                question: '突然收到一封神秘信件，邀请你前往异世界。你的第一反应是？',
+                options: [
+                    { text: '狂喜乱舞！立刻收拾行李，我的剑与魔法时代终于来了！', type: 'B', emoji: '⚔️' },
+                    { text: '默默把信丢进垃圾桶。开什么玩笑，我明天还要追番/打工呢。', type: 'D', emoji: '🍵' }
+                ]
+            },
+            {
+                id: 2,
+                axis: 'CT',
+                question: '看到有人在天台大喊“错的不是我，是世界！”，你的内心OS？',
+                options: [
+                    { text: '“难道他也是被选中的人？吾道不孤，邪王真眼在此！”', type: 'C', emoji: '👁️' },
+                    { text: '“这人作业太少了吧，赶紧拍下来发B站/朋友圈。”', type: 'T', emoji: '📱' }
+                ]
+            },
+            {
+                id: 3,
+                axis: 'AS',
+                question: '被人夸奖“你今天真好看/真厉害”，你的标准反应是？',
+                options: [
+                    { text: '移开视线，脸颊微红：“哈？笨蛋，才不需要你来夸！”', type: 'A', emoji: '😳' },
+                    { text: '眼睛闪闪发光，大方回应：“嘿嘿，谢谢你！你眼光真好！”', type: 'S', emoji: '✨' }
+                ]
+            },
+            {
+                id: 4,
+                axis: 'OM',
+                question: '面对终极Boss的挑衅，你觉得自己的真实剧本是？',
+                options: [
+                    { text: '微微一笑，解开封印：“抱歉，我刚刚只用了不到1%的实力。”', type: 'O', emoji: '😎' },
+                    { text: '腿已经软了，心中狂喊：“教练！我想回家！不要停下来啊！”', type: 'M', emoji: '😭' }
+                ]
+            },
+            {
+                id: 5,
+                axis: 'BD',
+                question: '当你打开一部新番，你最期待看到什么样的画面？',
+                options: [
+                    { text: '经费燃烧的高燃打斗，伴随着神级拔剑神曲BGM！', type: 'B', emoji: '🔥' },
+                    { text: '主角团们在部室/家里一起喝茶、吐槽的悠闲废萌时光。', type: 'D', emoji: '🍰' }
+                ]
+            },
+            {
+                id: 6,
+                axis: 'CT',
+                question: '如果你在路上捡到一本名为“死亡笔记”的黑皮本子？',
+                options: [
+                    { text: '“计划通！新世界的神就是我了！”立刻开始构思宏图霸业。', type: 'C', emoji: '📓' },
+                    { text: '“这年头的周边做得挺逼真啊。”随手交给警察叔叔。', type: 'T', emoji: '👮' }
+                ]
+            },
+            {
+                id: 7,
+                axis: 'AS',
+                question: '朋友生病了，你去探望时带了亲手熬的粥，你会怎么说？',
+                options: [
+                    { text: '“顺路随便买的而已，别误会了，快点吃掉啦！”', type: 'A', emoji: '🍲' },
+                    { text: '“特意为你熬的哦，快趁热吃吧，早点好起来！”', type: 'S', emoji: '🥰' }
+                ]
+            },
+            {
+                id: 8,
+                axis: 'OM',
+                question: '如果在转生分配技能时，你觉得自己的运气通常是？',
+                options: [
+                    { text: '一发入魂出彩光，开局直接SSR神级被动拉满！', type: 'O', emoji: '🌟' },
+                    { text: '沉底吃保底，或者抽到诸如“水之女神”这种纯坑货技能。', type: 'M', emoji: '💧' }
+                ]
+            },
+            {
+                id: 9,
+                axis: 'BD',
+                question: '在路上不小心撞到了带着吐司面包的转校生，接下来你希望发生？',
+                options: [
+                    { text: '由于这次碰撞，意外卷入了一场关乎世界存亡的异能战斗！', type: 'B', emoji: '💥' },
+                    { text: '成为欢喜冤家，展开充满恋爱酸臭味的学园日常。', type: 'D', emoji: '🌸' }
+                ]
+            },
+            {
+                id: 10,
+                axis: 'CT',
+                question: '如果要给你起一个响亮的称号，你更喜欢哪种风格？',
+                options: [
+                    { text: '漆黑烈焰之堕天使 / 爆裂魔法使 / 独行玩家', type: 'C', emoji: '🐉' },
+                    { text: '万事屋老板 / 靠谱的成年人 / 普通的高中生', type: 'T', emoji: '👓' }
+                ]
+            },
+            {
+                id: 11,
+                axis: 'AS',
+                question: '和约会对象见面迟到了，你会怎么解释？',
+                options: [
+                    { text: '“才、才不是因为挑衣服晚了！路上刚好碰到了点麻烦而已！”', type: 'A', emoji: '😤' },
+                    { text: '双手合十：“对不起对不起！为了补偿你，今天我请客！”', type: 'S', emoji: '🙏' }
+                ]
+            },
+            {
+                id: 12,
+                axis: 'OM',
+                question: '拿到新手装备出门打怪，你的真实战绩是？',
+                options: [
+                    { text: '随手捡根树枝都能秒杀魔龙，被村民当作勇者膜拜。', type: 'O', emoji: '🗡️' },
+                    { text: '穿上神装出门，结果被村口的史莱姆一击必杀。', type: 'M', emoji: '👻' }
+                ]
+            }
+        ];
+
+        // --- 16种动漫人格结果 ---
+        const resultsData = {
+            'BCAO': { title: '霸总傲天', neta: '经典傲娇战神，口嫌体正直地秒杀了魔王', desc: '你拥有强大的实力和狂热的战斗欲，内心戏极度中二，但表面上总是死鸭子嘴硬。嘴上说着“人类的死活与我无关”，暗地里却偷偷把反派全灭了。（代表人物：傲娇版骨王、暗影大人）', color: 'bg-purple-600', icon: '👑' },
+            'BCAM': { title: '不屈的打工魔王', neta: '中二且傲娇，屡战屡败，屡败屡战', desc: '你的灵魂充满了中二的设定和不屈的斗志，虽然现实中总是因为各种原因吃瘪战力拉胯，但你为了守护尊严（或者全勤奖）永不言弃，傲娇属性点满。（代表人物：真奥贞夫）', color: 'bg-red-500', icon: '🍔' },
+            'BCSO': { title: '王道热血主角', neta: '“我要成为海贼王！”靠羁绊拯救世界', desc: '纯度极高的热血漫主角！你直球、热情、充满幻想，并且往往拥有开挂般的实力或潜能。你会毫不犹豫地向伙伴表达爱意，用必杀技轰碎一切绝望！（代表人物：鸣人、路飞）', color: 'bg-orange-500', icon: '🔥' },
+            'BCSM': { title: '头铁的笨蛋勇者', neta: '天赋不够热血来凑，仰卧起坐的神', desc: '你可能没有天生的神级外挂，日常都在挨打的边缘试探。但你拥有最纯粹的直球和热血，靠着“不要停下来啊”的意志力，总能创造奇迹。（代表人物：早期李洛克、炭治郎）', color: 'bg-red-600', icon: '🤕' },
+            'BTAO': { title: '高冷 B-King', neta: '内心疯狂吐槽，表面冷酷无情，实力天花板', desc: '你有着极强的实力，却总觉得“好麻烦”。面对周围的各种奇葩，你的内心一直在进行着高密度的精准吐槽。表面高冷傲娇，其实是在掩饰你的无敌。（代表人物：齐木楠雄、绫小路清隆、坂本）', color: 'bg-blue-700', icon: '🕶️' },
+            'BTAM': { title: '悲催的吐槽役', neta: '战力只有5的本体，被迫卷入神仙打架', desc: '你是一个渴望平静的正常人，却总是被卷入热血战斗中。你用生命在吐槽，一边傲娇地抱怨一边帮忙擦屁股，虽然天天吃瘪，但你才是团队不可或缺的灵魂！（代表人物：阿虚、志村新八）', color: 'bg-gray-500', icon: '👓' },
+            'BTSO': { title: '扮猪吃虎大师', neta: '平时是个吐槽沙雕，一旦认真一拳解决', desc: '日常看起来散漫无敌，喜欢直球吐槽生活琐事（比如超市特卖）。但当真正的危机降临，你会收起沙雕的一面，展现出绝对碾压的实力，深藏功与名。（代表人物：埼玉老师、银时）', color: 'bg-yellow-500', icon: '👊' },
+            'BTSM': { title: '欢乐喜剧人', neta: '战斗全靠搞笑，在挨打中制造笑点', desc: '你简直是行走的表情包！在激烈的战斗中，你总能用最直球的沙雕行为化解危机（或者惹出更大的麻烦）。虽然经常吃瘪，但你的乐观能感染所有人。（代表人物：佐藤和真、各种搞笑番配角）', color: 'bg-yellow-400', icon: '🤣' },
+            'DCAO': { title: '家里蹲吸血鬼真祖', neta: '实力灭世只想打游戏，极度社恐傲娇', desc: '你拥有毁灭世界的设定，但你的终极梦想是永远宅在家里打游戏看番。面对外界的接触，你会傲娇地竖起尖刺掩饰社恐。只要不拔你网线，世界就和平。（代表人物：废天使加百列、各种家里蹲神仙）', color: 'bg-indigo-600', icon: '🎮' },
+            'DCAM': { title: '重度中二病晚期', neta: '“邪王真眼是最强的！”战力为零的日常萌物', desc: '你沉浸在自己设定的宏大世界观里，给每个文具都起了必杀技的名字。虽然现实中战力为零、娇羞又傲娇，但你的中二病其实是在保护你温柔的心。（代表人物：小鸟游六花、海藤瞬）', color: 'bg-pink-500', icon: '🌂' },
+            'DCSO': { title: '天然呆满级大佬', neta: '隐居新手村的史莱姆，直球待人', desc: '明明拥有霸榜级别的实力，却只想过喝茶种田的安逸日子。你对所有人直球表达善意，经常在不经意间展露神力吓坏旁人，自己却浑然不知。（代表人物：满级史莱姆、各种退休凤傲天）', color: 'bg-teal-500', icon: '🍵' },
+            'DCSM': { title: '异界观光吃货', neta: '毫无战力，但能用直球和真诚收复天下', desc: '你是日常番里最让人羡慕的存在！虽然没有任何战斗力，总是大惊小怪，但你用最真诚直球的态度对待一切（尤其是美食），轻轻松松就收获了神仙们的友谊。（代表人物：异世界食堂常客、结城理）', color: 'bg-green-500', icon: '🍱' },
+            'DTAO': { title: '毒舌学神/大小姐', neta: '日常番战力天花板，看透一切疯狂吐槽', desc: '在日常/校园的范畴内，你就是无敌的存在。你智商超群，看透了人际关系的本质，热衷于毒舌吐槽。但剥开冷酷傲娇的外壳，你其实有一颗渴望被理解的心。（代表人物：雪之下雪乃、四宫辉夜）', color: 'bg-red-700', icon: '☕' },
+            'DTAM': { title: '经典败犬青梅', neta: '明明是我先来的！吐槽吃瘪两开花', desc: '（尽力了！）你活泼、毒舌、爱吐槽，和大家都打成一片。但在关键时刻总是死鸭子嘴硬不肯A上去，导致在感情或日常比拼中疯狂吃瘪，让人心疼又好笑。（代表人物：英梨梨及各大金发双马尾）', color: 'bg-yellow-300', icon: '🐶' },
+            'DTSO': { title: '无敌现充王', neta: '日常番真神，情商拉满，直球撩人', desc: '师傅受我一拜！你是日常番里的神级人物。你看破了各种二次元套路并能精准吐槽，同时却能用极高的情商和最直球的方式解决各种人际危机，到处散发魅力。（代表人物：梓川咲太、比企谷八幡-后期）', color: 'bg-blue-500', icon: '🐷' },
+            'DTSM': { title: '普通的路人A', neta: '真实不做作，在二次元里当个快乐的背景板', desc: '这就是最真实的你我！没有任何超能力，没有任何光环，在一群神仙里当个快乐的吃瓜群众。你坦率、真实，用最犀利的吐槽围观着大佬们的表演。（代表人物：普通的男/女高中生）', color: 'bg-gray-400', icon: '👤' }
+        };
+
+        const App = () => {
+            const [step, setStep] = useState('welcome'); // 'welcome', 'quiz', 'loading', 'result'
+            const [currentQ, setCurrentQ] = useState(0);
+            const [scores, setScores] = useState({ B: 0, D: 0, C: 0, T: 0, A: 0, S: 0, O: 0, M: 0 });
+            const [resultCode, setResultCode] = useState('');
+
+            const handleStart = () => {
+                setStep('quiz');
+                setScores({ B: 0, D: 0, C: 0, T: 0, A: 0, S: 0, O: 0, M: 0 });
+                setCurrentQ(0);
+            };
+
+            const handleAnswer = (type) => {
+                const newScores = { ...scores, [type]: scores[type] + 1 };
+                setScores(newScores);
+
+                if (currentQ < questions.length - 1) {
+                    setCurrentQ(currentQ + 1);
+                } else {
+                    calculateResult(newScores);
+                }
+            };
+
+            const calculateResult = (finalScores) => {
+                setStep('loading');
+                
+                // 计算4个维度的结果
+                const dim1 = finalScores.B >= finalScores.D ? 'B' : 'D';
+                const dim2 = finalScores.C >= finalScores.T ? 'C' : 'T';
+                const dim3 = finalScores.A >= finalScores.S ? 'A' : 'S';
+                const dim4 = finalScores.O >= finalScores.M ? 'O' : 'M';
+                
+                const finalCode = `${dim1}${dim2}${dim3}${dim4}`;
+                
+                setTimeout(() => {
+                    setResultCode(finalCode);
+                    setStep('result');
+                }, 1500); // 模拟加载效果
+            };
+
+            // --- 欢迎界面 ---
+            if (step === 'welcome') {
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-4">
+                        <div className="bg-white rounded-3xl shadow-xl max-w-md w-full p-8 text-center border-4 border-[#fb7299] fade-in">
+                            <div className="text-6xl mb-4">📺</div>
+                            <h1 className="text-4xl font-bold mb-2 text-[#fb7299] anime-title">ABTI</h1>
+                            <h2 className="text-xl font-bold text-gray-700 mb-4">二次元灵魂测试</h2>
+                            <p className="text-gray-600 mb-6 text-sm leading-relaxed">
+                                最近全网爆火的SBTI衍生版！<br/>
+                                抛弃枯燥的心理学理论，用最纯正的动漫梗（泥头车、黑炎龙、白学现场等），测出你隐藏的真实二次元人设！
+                            </p>
+                            <button 
+                                onClick={handleStart}
+                                className="w-full bg-[#00a1d6] hover:bg-[#0091c2] text-white font-bold py-4 rounded-2xl shadow-lg transition duration-300 transform hover:-translate-y-1 text-lg">
+                                突破次元壁，开始测试！ 🚀
+                            </button>
+                            <p className="mt-4 text-xs text-gray-400">仅供娱乐，认真你就输了(╭☞•́⍛•̀)╭☞</p>
+                        </div>
+                    </div>
+                );
+            }
+
+            // --- 答题界面 ---
+            if (step === 'quiz') {
+                const q = questions[currentQ];
+                const progress = ((currentQ + 1) / questions.length) * 100;
+
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-4">
+                        <div className="bg-white rounded-3xl shadow-xl max-w-md w-full p-6 border-2 border-gray-200">
+                            {/* 进度条 */}
+                            <div className="mb-6">
+                                <div className="flex justify-between text-sm font-bold text-gray-500 mb-2">
+                                    <span>进度加载中...</span>
+                                    <span>{currentQ + 1} / {questions.length}</span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-3">
+                                    <div className="bg-[#fb7299] h-3 rounded-full transition-all duration-300 ease-out" style={{ width: `${progress}%` }}></div>
+                                </div>
+                            </div>
+
+                            {/* 题目内容 */}
+                            <div key={q.id} className="fade-in">
+                                <h3 className="text-xl font-bold text-gray-800 mb-6 min-h-[80px] leading-relaxed">
+                                    <span className="text-[#00a1d6] mr-2">Q{q.id}.</span>
+                                    {q.question}
+                                </h3>
+                                
+                                <div className="space-y-4">
+                                    {q.options.map((opt, index) => (
+                                        <button 
+                                            key={index}
+                                            onClick={() => handleAnswer(opt.type)}
+                                            className="option-btn w-full text-left bg-gray-50 hover:bg-pink-50 border-2 border-gray-100 hover:border-[#fb7299] rounded-2xl p-4 flex items-center group">
+                                            <span className="text-3xl mr-4 group-hover:scale-110 transition-transform">{opt.emoji}</span>
+                                            <span className="text-gray-700 font-medium">{opt.text}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // --- 加载界面 ---
+            if (step === 'loading') {
+                return (
+                    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+                        <div className="animate-spin text-6xl mb-4">🌀</div>
+                        <h2 className="text-xl font-bold text-gray-700 anime-title animate-pulse">正在解析你的二次元灵魂...</h2>
+                        <p className="text-gray-500 mt-2">（正在向阿克夏记录发送请求）</p>
+                    </div>
+                );
+            }
+
+            // --- 结果界面 ---
+            if (step === 'result') {
+                const result = resultsData[resultCode] || resultsData['DTSM']; // Fallback
+                
+                // 性格倾向分析百分比 (只是视觉效果，基于绝对值)
+                const statB = Math.round((scores.B / 3) * 100);
+                const statC = Math.round((scores.C / 3) * 100);
+                const statA = Math.round((scores.A / 3) * 100);
+                const statO = Math.round((scores.O / 3) * 100);
+
+                return (
+                    <div className="min-h-screen py-10 px-4 flex justify-center items-start">
+                        <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden fade-in relative">
+                            {/* 头部背景 */}
+                            <div className={`${result.color} p-8 text-center text-white relative overflow-hidden`}>
+                                <div className="absolute top-0 right-0 -mr-8 -mt-8 text-9xl opacity-20">{result.icon}</div>
+                                <p className="text-sm font-bold uppercase tracking-widest mb-1 opacity-80">你的 ABTI 人格类型</p>
+                                <h1 className="text-4xl font-extrabold anime-title tracking-wide mb-2">
+                                    {result.title}
+                                </h1>
+                                <div className="inline-block bg-black bg-opacity-20 rounded-full px-4 py-1 text-sm font-mono mt-2">
+                                    {resultCode}
+                                </div>
+                            </div>
+
+                            {/* 内容区 */}
+                            <div className="p-6">
+                                <div className="text-center mb-6">
+                                    <span className="text-5xl block mb-2">{result.icon}</span>
+                                    <h3 className="text-lg font-bold text-gray-800">“{result.neta}”</h3>
+                                </div>
+                                
+                                <div className="bg-gray-50 rounded-2xl p-4 text-gray-600 text-sm leading-relaxed mb-6 border border-gray-100 shadow-inner">
+                                    {result.desc}
+                                </div>
+
+                                {/* 属性雷达/进度条 */}
+                                <div className="mb-6 space-y-3">
+                                    <h4 className="font-bold text-gray-700 text-sm border-b pb-1">灵魂属性面板</h4>
+                                    
+                                    <div className="flex items-center text-xs">
+                                        <span className="w-12 text-right mr-2 text-gray-500">摸鱼</span>
+                                        <div className="flex-1 h-3 bg-blue-100 rounded-full overflow-hidden flex">
+                                            <div className="bg-[#fb7299] h-full" style={{width: `${statB}%`}}></div>
+                                            <div className="bg-[#00a1d6] h-full flex-1"></div>
+                                        </div>
+                                        <span className="w-12 ml-2 font-bold text-pink-500">热血战斗</span>
+                                    </div>
+
+                                    <div className="flex items-center text-xs">
+                                        <span className="w-12 text-right mr-2 text-gray-500">吐槽现充</span>
+                                        <div className="flex-1 h-3 bg-blue-100 rounded-full overflow-hidden flex">
+                                            <div className="bg-[#fb7299] h-full" style={{width: `${statC}%`}}></div>
+                                            <div className="bg-[#00a1d6] h-full flex-1"></div>
+                                        </div>
+                                        <span className="w-12 ml-2 font-bold text-pink-500">中二幻想</span>
+                                    </div>
+
+                                    <div className="flex items-center text-xs">
+                                        <span className="w-12 text-right mr-2 text-gray-500">坦率直球</span>
+                                        <div className="flex-1 h-3 bg-blue-100 rounded-full overflow-hidden flex">
+                                            <div className="bg-[#fb7299] h-full" style={{width: `${statA}%`}}></div>
+                                            <div className="bg-[#00a1d6] h-full flex-1"></div>
+                                        </div>
+                                        <span className="w-12 ml-2 font-bold text-pink-500">死鸭子嘴硬</span>
+                                    </div>
+
+                                    <div className="flex items-center text-xs">
+                                        <span className="w-12 text-right mr-2 text-gray-500">战五渣</span>
+                                        <div className="flex-1 h-3 bg-blue-100 rounded-full overflow-hidden flex">
+                                            <div className="bg-[#fb7299] h-full" style={{width: `${statO}%`}}></div>
+                                            <div className="bg-[#00a1d6] h-full flex-1"></div>
+                                        </div>
+                                        <span className="w-12 ml-2 font-bold text-pink-500">龙傲天</span>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-4">
+                                    <button 
+                                        onClick={handleStart}
+                                        className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl transition">
+                                        再测一次
+                                    </button>
+                                    <button 
+                                        onClick={() => alert("截图分享到你的B站动态或朋友圈吧！")}
+                                        className="flex-1 bg-[#fb7299] hover:bg-pink-600 text-white font-bold py-3 rounded-xl shadow-md transition transform hover:-translate-y-1">
+                                        分享结果
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return null;
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
